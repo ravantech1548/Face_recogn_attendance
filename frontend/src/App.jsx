@@ -9,8 +9,11 @@ import Login from './components/Login'
 import StaffManagement from './components/StaffManagement'
 import AddStaff from './components/AddStaff'
 import ProtectedRoute from './components/ProtectedRoute'
+import AdminRoute from './components/AdminRoute'
+import HomeRedirect from './components/HomeRedirect'
 import Navbar from './components/Navbar'
 import { AuthProvider } from './context/AuthContext'
+import AttendanceReport from './components/AttendanceReport'
 
 const queryClient = new QueryClient()
 
@@ -31,21 +34,13 @@ export default function App() {
             <Navbar />
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/" element={<ProtectedRoute component={HomeRedirect} />} />
+              <Route path="/staff" element={<AdminRoute component={StaffManagement} />} />
+              <Route path="/staff/add" element={<AdminRoute component={AddStaff} />} />
+              <Route path="/staff/edit/:staffId" element={<AdminRoute component={AddStaff} />} />
               <Route
-                path="/"
-                element={<ProtectedRoute component={StaffManagement} />}
-              />
-              <Route
-                path="/staff"
-                element={<ProtectedRoute component={StaffManagement} />}
-              />
-              <Route
-                path="/staff/add"
-                element={<ProtectedRoute component={AddStaff} />}
-              />
-              <Route
-                path="/staff/edit/:staffId"
-                element={<ProtectedRoute component={AddStaff} />}
+                path="/attendance"
+                element={<ProtectedRoute component={AttendanceReport} />}
               />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>

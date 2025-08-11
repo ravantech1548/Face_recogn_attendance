@@ -16,7 +16,10 @@ export default function Navbar() {
         <Typography variant="h6" sx={{ flexGrow: 1, cursor: 'pointer' }} onClick={() => navigate('/')}>Face Admin</Typography>
         {user ? (
           <Box>
-            <Button color="inherit" onClick={() => navigate('/staff')}>Staff</Button>
+            {user?.role === 'admin' && (
+              <Button color="inherit" onClick={() => navigate('/staff')}>Staff</Button>
+            )}
+            <Button color="inherit" onClick={() => navigate('/attendance')}>Attendance</Button>
             <Button color="inherit" onClick={logout}>Logout</Button>
           </Box>
         ) : (

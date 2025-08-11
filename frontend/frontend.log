@@ -20,3 +20,20 @@
 10:08:15 pm [vite] hmr update /src/components/AddStaff.jsx
 10:08:15 pm [vite] vite.config.js changed, restarting server...
 10:08:16 pm [vite] server restarted.
+10:38:56 pm [vite] hmr update /src/context/AuthContext.jsx
+10:38:56 pm [vite] hmr invalidate /src/context/AuthContext.jsx Could not Fast Refresh ("useAuth" export is incompatible). Learn more at https://github.com/vitejs/vite-plugin-react/tree/main/packages/plugin-react#consistent-components-exports
+10:38:56 pm [vite] hmr update /src/App.jsx, /src/components/Login.jsx, /src/components/Navbar.jsx, /src/components/ProtectedRoute.jsx
+10:44:44 pm [vite] hmr update /src/App.jsx
+10:45:01 pm [vite] hmr update /src/components/Navbar.jsx
+10:45:16 pm [vite] hmr update /src/components/AttendanceReport.jsx
+10:45:16 pm [vite] hmr update /src/App.jsx
+10:45:16 pm [vite] hmr update /src/components/Navbar.jsx
+10:49:45 pm [vite] hmr update /src/components/Navbar.jsx
+10:52:31 pm [vite] hmr update /src/App.jsx
+10:52:52 pm [vite] hmr update /src/components/Navbar.jsx
+10:52:52 pm [vite] hmr update /src/App.jsx
+11:07:04 pm [vite] hmr update /src/App.jsx
+11:07:14 pm [vite] hmr update /src/components/AttendanceReport.jsx
+11:07:31 pm [vite] hmr update /src/components/HomeRedirect.jsx
+11:07:31 pm [vite] hmr update /src/App.jsx
+11:07:31 pm [vite] hmr update /src/components/AttendanceReport.jsx

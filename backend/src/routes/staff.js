@@ -4,6 +4,7 @@ const path = require('path');
 const { body, validationResult } = require('express-validator');
 const pool = require('../config/database');
 const auth = require('../middleware/auth');
+const requireAdmin = require('../middleware/requireAdmin');
 
 const router = express.Router();
 
@@ -65,7 +66,7 @@ router.get('/:staffId', auth, async (req, res) => {
 
 router.post(
   '/',
-  [auth, upload.single('faceImage')],
+  [auth, requireAdmin, upload.single('faceImage')],
   [
     body('staffId').notEmpty().withMessage('Staff ID is required'),
     body('fullName').notEmpty().withMessage('Full name is required'),
@@ -108,7 +109,7 @@ router.post(
   }
 );
 
-router.put('/:staffId', [auth, upload.single('faceImage')], async (req, res) => {
+router.put('/:staffId', [auth, requireAdmin, upload.single('faceImage')], async (req, res) => {
   try {
     const { staffId } = req.params;
     const { fullName, email, designation, department } = req.body;
@@ -139,7 +140,7 @@ router.put('/:staffId', [auth, upload.single('faceImage')], async (req, res) => 
   }
 });
 
-router.delete('/:staffId', auth, async (req, res) => {
+router.delete('/:staffId', [auth, requireAdmin], async (req, res) => {
   try {
     const { staffId } = req.params;
     const result = await pool.query('DELETE FROM staff WHERE staff_id = $1 RETURNING *', [staffId]);
