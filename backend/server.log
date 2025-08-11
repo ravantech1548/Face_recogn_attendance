@@ -1,0 +1,118 @@
+
+> face-recognition-backend@1.0.0 dev
+> nodemon server.js
+
+[33m[nodemon] 3.1.10[39m
+[33m[nodemon] to restart at any time, enter `rs`[39m
+[33m[nodemon] watching path(s): *.*[39m
+[33m[nodemon] watching extensions: js,mjs,cjs,json[39m
+[32m[nodemon] starting `node server.js`[39m
+Server running on port 5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+Server running on port 5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+Server running on port 5000
+[32m[nodemon] restarting due to changes...[39m
+[32m[nodemon] starting `node server.js`[39m
+[initDb] Failed to apply schema: connect ECONNREFUSED 127.0.0.1:5432
+Server running on port 5000
+Login error: error: password authentication failed for user "postgres"
+    at /home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async /home/saravanan/Documents/Github/02Facerecognition/backend/src/routes/auth.js:52:22 {
+  length: 104,
+  severity: 'FATAL',
+  code: '28P01',
+  detail: undefined,
+  hint: undefined,
+  position: undefined,
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'auth.c',
+  line: '321',
+  routine: 'auth_failed'
+}
+Registration error: error: relation "users" does not exist
+    at /home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async /home/saravanan/Documents/Github/02Facerecognition/backend/src/routes/auth.js:22:26 {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '15',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+Login error: error: relation "users" does not exist
+    at /home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/pg-pool/index.js:45:11
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async /home/saravanan/Documents/Github/02Facerecognition/backend/src/routes/auth.js:52:22 {
+  length: 104,
+  severity: 'ERROR',
+  code: '42P01',
+  detail: undefined,
+  hint: undefined,
+  position: '15',
+  internalPosition: undefined,
+  internalQuery: undefined,
+  where: undefined,
+  schema: undefined,
+  table: undefined,
+  column: undefined,
+  dataType: undefined,
+  constraint: undefined,
+  file: 'parse_relation.c',
+  line: '1449',
+  routine: 'parserOpenTable'
+}
+SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at JSON.parse (<anonymous>)
+    at parse (/home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/body-parser/lib/types/json.js:92:19)
+    at /home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/body-parser/lib/read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:214:14)
+    at invokeCallback (/home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/raw-body/index.js:238:16)
+    at done (/home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:518:28)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
+SyntaxError: Expected property name or '}' in JSON at position 1 (line 1 column 2)
+    at JSON.parse (<anonymous>)
+    at parse (/home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/body-parser/lib/types/json.js:92:19)
+    at /home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/body-parser/lib/read.js:128:18
+    at AsyncResource.runInAsyncScope (node:async_hooks:214:14)
+    at invokeCallback (/home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/raw-body/index.js:238:16)
+    at done (/home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/raw-body/index.js:227:7)
+    at IncomingMessage.onEnd (/home/saravanan/Documents/Github/02Facerecognition/backend/node_modules/raw-body/index.js:287:7)
+    at IncomingMessage.emit (node:events:518:28)
+    at endReadableNT (node:internal/streams/readable:1698:12)
+    at process.processTicksAndRejections (node:internal/process/task_queues:90:21)
