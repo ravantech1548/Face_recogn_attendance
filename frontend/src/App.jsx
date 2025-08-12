@@ -14,6 +14,7 @@ import HomeRedirect from './components/HomeRedirect'
 import Navbar from './components/Navbar'
 import { AuthProvider } from './context/AuthContext'
 import AttendanceReport from './components/AttendanceReport'
+import AdminFaceAttendance from './components/AdminFaceAttendance'
 
 const queryClient = new QueryClient()
 
@@ -41,6 +42,10 @@ export default function App() {
               <Route
                 path="/attendance"
                 element={<ProtectedRoute component={AttendanceReport} />}
+              />
+              <Route
+                path="/attendance/face"
+                element={<AdminRoute component={AdminFaceAttendance} />}
               />
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>

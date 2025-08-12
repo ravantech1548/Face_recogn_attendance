@@ -17,7 +17,10 @@ export default function Navbar() {
         {user ? (
           <Box>
             {user?.role === 'admin' && (
-              <Button color="inherit" onClick={() => navigate('/staff')}>Staff</Button>
+              <>
+                <Button color="inherit" onClick={() => navigate('/staff')}>Staff</Button>
+                <Button color="inherit" onClick={() => navigate('/attendance/face')}>Face Attendance</Button>
+              </>
             )}
             <Button color="inherit" onClick={() => navigate('/attendance')}>Attendance</Button>
             <Button color="inherit" onClick={logout}>Logout</Button>
