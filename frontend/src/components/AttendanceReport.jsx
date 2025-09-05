@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useMemo, useState, useEffect } from 'react'
 import {
   Container,
   Paper,
@@ -33,6 +33,26 @@ export default function AttendanceReport() {
     const res = await axios.get('http://localhost:5000/api/staff')
     return res.data
   })
+
+  // Get user's staff_id for normal users
+  const { data: userStaffId } = useQuery(
+    ['userStaffId', user?.userId],
+    async () => {
+      if (user?.role === 'admin') return null
+      const res = await axios.get('http://localhost:5000/api/users/me', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      })
+      return res.data.staff_id
+    },
+    { enabled: user?.role !== 'admin' && !!user?.userId }
+  )
+
+  // Auto-set staff filter for normal users
+  useEffect(() => {
+    if (user?.role !== 'admin' && userStaffId) {
+      setStaffIdFilter(userStaffId)
+    }
+  }, [user?.role, userStaffId])
 
   const queryParams = useMemo(() => {
     const params = {}
@@ -74,48 +94,46 @@ export default function AttendanceReport() {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 3 }}>
-      <Paper sx={{ p: 2, mb: 2 }}>
-        <Typography variant="h6" gutterBottom>Attendance Actions</Typography>
-        <Grid container spacing={2} alignItems="center">
-          <Grid item xs={12} sm={6} md={4}>
-            <TextField
-              select
-              fullWidth
-              label="Select Staff"
-              value={actionStaffId}
-              onChange={(e) => setActionStaffId(e.target.value)}
-            >
-              {staffList?.map((s) => (
-                <MenuItem key={s.staff_id} value={s.staff_id}>
-                  {s.full_name} ({s.staff_id})
-                </MenuItem>
-              ))}
-            </TextField>
+      {user?.role === 'admin' && (
+        <Paper sx={{ p: 2, mb: 2 }}>
+          <Typography variant="h6" gutterBottom>Attendance Actions</Typography>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} sm={6} md={4}>
+              <TextField
+                select
+                fullWidth
+                label="Select Staff"
+                value={actionStaffId}
+                onChange={(e) => setActionStaffId(e.target.value)}
+              >
+                {staffList?.map((s) => (
+                  <MenuItem key={s.staff_id} value={s.staff_id}>
+                    {s.full_name} ({s.staff_id})
+                  </MenuItem>
+                ))}
+              </TextField>
+            </Grid>
+            <Grid item xs={12} sm={'auto'}>
+              <Button
+                variant="contained"
+                disabled={!actionStaffId || checkIn.isLoading}
+                onClick={() => checkIn.mutate(actionStaffId)}
+              >
+                {checkIn.isLoading ? 'Checking in...' : 'Check In'}
+              </Button>
+            </Grid>
+            <Grid item xs={12} sm={'auto'}>
+              <Button
+                variant="outlined"
+                disabled={!actionStaffId || checkOut.isLoading}
+                onClick={() => checkOut.mutate(actionStaffId)}
+              >
+                {checkOut.isLoading ? 'Checking out...' : 'Check Out'}
+              </Button>
+            </Grid>
           </Grid>
-          {user?.role === 'admin' && (
-            <>
-              <Grid item xs={12} sm={'auto'}>
-                <Button
-                  variant="contained"
-                  disabled={!actionStaffId || checkIn.isLoading}
-                  onClick={() => checkIn.mutate(actionStaffId)}
-                >
-                  {checkIn.isLoading ? 'Checking in...' : 'Check In'}
-                </Button>
-              </Grid>
-              <Grid item xs={12} sm={'auto'}>
-                <Button
-                  variant="outlined"
-                  disabled={!actionStaffId || checkOut.isLoading}
-                  onClick={() => checkOut.mutate(actionStaffId)}
-                >
-                  {checkOut.isLoading ? 'Checking out...' : 'Check Out'}
-                </Button>
-              </Grid>
-            </>
-          )}
-        </Grid>
-      </Paper>
+        </Paper>
+      )}
 
       <Paper sx={{ p: 2 }}>
         <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
@@ -123,12 +141,14 @@ export default function AttendanceReport() {
           <Box display="flex" gap={2}>
             <TextField type="date" label="Start Date" InputLabelProps={{ shrink: true }} value={startDate} onChange={(e) => setStartDate(e.target.value)} />
             <TextField type="date" label="End Date" InputLabelProps={{ shrink: true }} value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-            <TextField select label="Staff" value={staffIdFilter} onChange={(e) => setStaffIdFilter(e.target.value)} sx={{ minWidth: 200 }}>
-              <MenuItem value="">All staff</MenuItem>
-              {staffList?.map((s) => (
-                <MenuItem key={s.staff_id} value={s.staff_id}>{s.full_name} ({s.staff_id})</MenuItem>
-              ))}
-            </TextField>
+            {user?.role === 'admin' && (
+              <TextField select label="Staff" value={staffIdFilter} onChange={(e) => setStaffIdFilter(e.target.value)} sx={{ minWidth: 200 }}>
+                <MenuItem value="">All staff</MenuItem>
+                {staffList?.map((s) => (
+                  <MenuItem key={s.staff_id} value={s.staff_id}>{s.full_name} ({s.staff_id})</MenuItem>
+                ))}
+              </TextField>
+            )}
             <Button variant="outlined" onClick={() => { setStartDate(''); setEndDate(''); setStaffIdFilter(''); refetch() }}>Reset</Button>
           </Box>
         </Box>

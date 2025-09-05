@@ -16,6 +16,9 @@ export default function AddStaff() {
   const [preview, setPreview] = useState(null)
 
   const { register, handleSubmit, formState: { errors }, setValue } = useForm()
+  const [createLogin, setCreateLogin] = useState(false)
+  const [loginUsername, setLoginUsername] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
 
   const { data: staffData, isLoading } = useQuery(
     ['staff', staffId],
@@ -67,7 +70,26 @@ export default function AddStaff() {
     formData.append('designation', data.designation)
     formData.append('department', data.department)
     if (selectedFile) formData.append('faceImage', selectedFile)
-    mutation.mutate(formData)
+    mutation.mutate(formData, {
+      onSuccess: async () => {
+        if (!isEditing && createLogin && loginUsername && loginPassword) {
+          try {
+            const token = localStorage.getItem('token')
+            await axios.post('http://localhost:5000/api/users', {
+              username: loginUsername,
+              password: loginPassword,
+              role: 'user',
+              staffId: data.staffId,
+            }, {
+              headers: { Authorization: `Bearer ${token}` }
+            })
+            toast.success('Login created for staff')
+          } catch (e) {
+            toast.error('Failed to create login')
+          }
+        }
+      }
+    })
   }
 
   if (isLoading) return <Typography sx={{ p: 3 }}>Loading...</Typography>
@@ -103,6 +125,27 @@ export default function AddStaff() {
               </Button>
               {preview && <Avatar src={preview} sx={{ width: 80, height: 80, ml: 2, display: 'inline-flex', verticalAlign: 'middle' }} />}
             </Grid>
+            {!isEditing && (
+              <>
+                <Grid item xs={12}>
+                  <Box display="flex" alignItems="center" gap={2}>
+                    <label>
+                      <input type="checkbox" checked={createLogin} onChange={(e) => setCreateLogin(e.target.checked)} /> Create login for this staff
+                    </label>
+                  </Box>
+                </Grid>
+                {createLogin && (
+                  <>
+                    <Grid item xs={12} sm={6}>
+                      <TextField fullWidth label="Login Username" value={loginUsername} onChange={(e) => setLoginUsername(e.target.value)} />
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <TextField fullWidth label="Login Password" type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} />
+                    </Grid>
+                  </>
+                )}
+              </>
+            )}
           </Grid>
           <Box mt={3} display="flex" gap={2}>
             <Button type="submit" variant="contained" disabled={mutation.isLoading}>

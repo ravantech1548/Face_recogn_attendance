@@ -80,7 +80,15 @@ router.post(
 // Get attendance by date range
 router.get('/', auth, async (req, res) => {
   try {
-    const { startDate, endDate, staffId } = req.query;
+    const { startDate, endDate } = req.query;
+    // Non-admins can only query their own records via linked staff_id
+    let { staffId } = req.query;
+    if (req.user?.role !== 'admin') {
+      // Lookup staff_id from users
+      const ures = await pool.query('SELECT staff_id FROM users WHERE user_id = $1', [req.user.userId]);
+      const ownStaffId = ures.rows?.[0]?.staff_id || null;
+      staffId = ownStaffId || staffId;
+    }
     const params = [];
     const conditions = [];
     if (startDate) {

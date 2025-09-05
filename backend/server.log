@@ -9,15 +9,3 @@
 [32m[nodemon] starting `node server.js`[39m
 [initDb] Database schema ensured
 Server running on port 5000
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node server.js`[39m
-[initDb] Database schema ensured
-Server running on port 5000
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node server.js`[39m
-[initDb] Database schema ensured
-Server running on port 5000
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node server.js`[39m
-[initDb] Database schema ensured
-Server running on port 5000
