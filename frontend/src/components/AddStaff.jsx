@@ -5,6 +5,7 @@ import { Container, Typography, TextField, Button, Box, Paper, Grid, Alert, Avat
 import axios from 'axios'
 import toast from 'react-hot-toast'
 import { useForm } from 'react-hook-form'
+import API_BASE_URL from '../config/api'
 
 export default function AddStaff() {
   const navigate = useNavigate()
@@ -22,7 +23,7 @@ export default function AddStaff() {
 
   const { data: staffData, isLoading } = useQuery(
     ['staff', staffId],
-    () => axios.get(`http://localhost:5000/api/staff/${staffId}`).then((r) => r.data),
+    () => axios.get(`${API_BASE_URL}/api/staff/${staffId}`).then((r) => r.data),
     { enabled: isEditing }
   )
 
@@ -33,14 +34,14 @@ export default function AddStaff() {
       setValue('email', staffData.email)
       setValue('designation', staffData.designation)
       setValue('department', staffData.department)
-      if (staffData.face_image_path) setPreview(`http://localhost:5000/${staffData.face_image_path}`)
+      if (staffData.face_image_path) setPreview(`${API_BASE_URL}/${staffData.face_image_path}`)
     }
   }, [staffData, isEditing, setValue])
 
   const mutation = useMutation(
     (formData) => {
-      if (isEditing) return axios.put(`http://localhost:5000/api/staff/${staffId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
-      return axios.post('http://localhost:5000/api/staff', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+      if (isEditing) return axios.put(`${API_BASE_URL}/api/staff/${staffId}`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+      return axios.post(`${API_BASE_URL}/api/staff`, formData, { headers: { 'Content-Type': 'multipart/form-data' } })
     },
     {
       onSuccess: () => {
@@ -75,7 +76,7 @@ export default function AddStaff() {
         if (!isEditing && createLogin && loginUsername && loginPassword) {
           try {
             const token = localStorage.getItem('token')
-            await axios.post('http://localhost:5000/api/users', {
+            await axios.post(`${API_BASE_URL}/api/users`, {
               username: loginUsername,
               password: loginPassword,
               role: 'user',

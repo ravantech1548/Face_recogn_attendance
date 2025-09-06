@@ -20,6 +20,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query'
 import axios from 'axios'
 import { useAuth } from '../context/AuthContext'
 import toast from 'react-hot-toast'
+import API_BASE_URL from '../config/api'
 
 export default function AttendanceReport() {
   const { user } = useAuth()
@@ -30,7 +31,7 @@ export default function AttendanceReport() {
   const [actionStaffId, setActionStaffId] = useState('')
 
   const { data: staffList } = useQuery('staff', async () => {
-    const res = await axios.get('http://localhost:5000/api/staff')
+    const res = await axios.get(`${API_BASE_URL}/api/staff`)
     return res.data
   })
 
@@ -39,7 +40,7 @@ export default function AttendanceReport() {
     ['userStaffId', user?.userId],
     async () => {
       if (user?.role === 'admin') return null
-      const res = await axios.get('http://localhost:5000/api/users/me', {
+      const res = await axios.get(`${API_BASE_URL}/api/users/me`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       })
       return res.data.staff_id
@@ -65,13 +66,13 @@ export default function AttendanceReport() {
   const { data: attendance, isLoading, refetch } = useQuery(
     ['attendance', queryParams],
     async () => {
-      const res = await axios.get('http://localhost:5000/api/attendance', { params: queryParams })
+      const res = await axios.get(`${API_BASE_URL}/api/attendance`, { params: queryParams })
       return res.data
     }
   )
 
   const checkIn = useMutation(
-    async (staffId) => axios.post('http://localhost:5000/api/attendance/check-in', { staffId }),
+    async (staffId) => axios.post(`${API_BASE_URL}/api/attendance/check-in`, { staffId }),
     {
       onSuccess: () => {
         toast.success('Check-in recorded')
@@ -82,7 +83,7 @@ export default function AttendanceReport() {
   )
 
   const checkOut = useMutation(
-    async (staffId) => axios.post('http://localhost:5000/api/attendance/check-out', { staffId }),
+    async (staffId) => axios.post(`${API_BASE_URL}/api/attendance/check-out`, { staffId }),
     {
       onSuccess: () => {
         toast.success('Check-out recorded')

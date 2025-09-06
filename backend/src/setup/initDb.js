@@ -21,6 +21,18 @@ async function initDb() {
     await pool.query(
       "CREATE INDEX IF NOT EXISTS idx_users_staff_id ON users(staff_id)"
     );
+    
+    // Add password reset functionality
+    await pool.query(
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token TEXT"
+    );
+    await pool.query(
+      "ALTER TABLE users ADD COLUMN IF NOT EXISTS reset_token_expires TIMESTAMP"
+    );
+    await pool.query(
+      "CREATE INDEX IF NOT EXISTS idx_users_reset_token ON users(reset_token)"
+    );
+    
     console.log('[initDb] Database schema ensured');
   } catch (error) {
     console.error('[initDb] Failed to apply schema:', error.message);

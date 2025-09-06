@@ -24,6 +24,19 @@ router.get('/me', auth, async (req, res) => {
   }
 });
 
+// Get all users (admin only)
+router.get('/', [auth, requireAdmin], async (req, res) => {
+  try {
+    const result = await pool.query(
+      'SELECT user_id, username, role, staff_id, created_at FROM users ORDER BY created_at DESC'
+    );
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Get users error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Admin creates or updates a user password/role
 router.post(
   '/',

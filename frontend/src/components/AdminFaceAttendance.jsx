@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { Container, Paper, Box, Typography, Button, Grid, Alert } from '@mui/material'
 import { useAuth } from '../context/AuthContext'
+import API_BASE_URL from '../config/api'
 
 export default function AdminFaceAttendance() {
   const { user } = useAuth()
@@ -60,7 +61,7 @@ export default function AdminFaceAttendance() {
     setError('')
     const formData = new FormData()
     formData.append('image', blob, filename)
-    const res = await fetch('http://localhost:8001/recognize', { method: 'POST', body: formData })
+    const res = await fetch('https://192.168.18.2:8001/recognize', { method: 'POST', body: formData })
     const data = await res.json()
     setLastResult(data)
 
@@ -69,7 +70,7 @@ export default function AdminFaceAttendance() {
     if (best?.staffId) {
       try {
         const token = localStorage.getItem('token')
-        await fetch('http://localhost:5000/api/attendance/face-event', {
+        await fetch(`${API_BASE_URL}/api/attendance/face-event`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,

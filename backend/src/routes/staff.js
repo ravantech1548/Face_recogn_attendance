@@ -1,6 +1,7 @@
 const express = require('express');
 const multer = require('multer');
 const path = require('path');
+const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const pool = require('../config/database');
 const auth = require('../middleware/auth');
@@ -38,7 +39,11 @@ const upload = multer({
 router.get('/', auth, async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT staff_id, full_name, email, designation, department, is_active, created_at FROM staff ORDER BY created_at DESC'
+      `SELECT s.staff_id, s.full_name, s.email, s.designation, s.department, s.is_active, s.created_at,
+              u.user_id, u.username, u.role
+       FROM staff s
+       LEFT JOIN users u ON s.staff_id = u.staff_id
+       ORDER BY s.created_at DESC`
     );
     res.json(result.rows);
   } catch (error) {
@@ -150,6 +155,98 @@ router.delete('/:staffId', [auth, requireAdmin], async (req, res) => {
     res.json({ message: 'Staff deleted successfully' });
   } catch (error) {
     console.error('Delete staff error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Create user account for staff member
+router.post('/:staffId/create-user', [auth, requireAdmin], [
+  body('username').isLength({ min: 3 }).withMessage('Username must be at least 3 characters'),
+  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('role').optional().isIn(['admin', 'user']),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { staffId } = req.params;
+    const { username, password, role = 'user' } = req.body;
+
+    // Check if staff exists
+    const staffResult = await pool.query('SELECT staff_id FROM staff WHERE staff_id = $1', [staffId]);
+    if (staffResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Staff not found' });
+    }
+
+    // Check if user already exists
+    const userExists = await pool.query('SELECT 1 FROM users WHERE username = $1 OR staff_id = $2', [username, staffId]);
+    if (userExists.rows.length > 0) {
+      return res.status(400).json({ message: 'Username already exists or staff already has a user account' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const result = await pool.query(
+      'INSERT INTO users (username, password, role, staff_id) VALUES ($1, $2, $3, $4) RETURNING user_id, username, role, staff_id',
+      [username, hashedPassword, role, staffId]
+    );
+
+    res.status(201).json({ message: 'User account created successfully', user: result.rows[0] });
+  } catch (error) {
+    console.error('Create user account error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Reset password for staff user account
+router.post('/:staffId/reset-password', [auth, requireAdmin], [
+  body('newPassword').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+], async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { staffId } = req.params;
+    const { newPassword } = req.body;
+
+    // Check if staff has a user account
+    const userResult = await pool.query('SELECT user_id, username FROM users WHERE staff_id = $1', [staffId]);
+    if (userResult.rows.length === 0) {
+      return res.status(404).json({ message: 'No user account found for this staff member' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query(
+      'UPDATE users SET password = $1 WHERE staff_id = $2',
+      [hashedPassword, staffId]
+    );
+
+    res.json({
+      message: 'Password reset successfully',
+      username: userResult.rows[0].username
+    });
+  } catch (error) {
+    console.error('Reset password error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
+// Delete user account for staff member
+router.delete('/:staffId/user-account', [auth, requireAdmin], async (req, res) => {
+  try {
+    const { staffId } = req.params;
+
+    const result = await pool.query('DELETE FROM users WHERE staff_id = $1 RETURNING username', [staffId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ message: 'No user account found for this staff member' });
+    }
+
+    res.json({ message: 'User account deleted successfully', username: result.rows[0].username });
+  } catch (error) {
+    console.error('Delete user account error:', error);
     res.status(500).json({ message: 'Server error' });
   }
 });

@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS users (
     username VARCHAR(50) UNIQUE NOT NULL,
     password TEXT NOT NULL,
     role VARCHAR(20) DEFAULT 'admin',
+    reset_token TEXT,
+    reset_token_expires TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

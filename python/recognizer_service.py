@@ -9,6 +9,7 @@ from PIL import Image
 import numpy as np
 import face_recognition
 import psycopg2
+import ssl
 
 
 DB_USER = os.getenv('DB_USER', 'postgres')
@@ -179,7 +180,17 @@ def recognize():
 if __name__ == '__main__':
     # Lazy load at start
     store.ensure_loaded(force=True)
-    app.run(host='0.0.0.0', port=8001)
+    
+    # Try to run with HTTPS
+    try:
+        ssl_cert = os.path.join(REPO_ROOT, 'ssl', 'cert.pem')
+        ssl_key = os.path.join(REPO_ROOT, 'ssl', 'key.pem')
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(ssl_cert, ssl_key)
+        app.run(host='0.0.0.0', port=8001, ssl_context=context)
+    except Exception as e:
+        print(f"HTTPS failed, falling back to HTTP: {e}")
+        app.run(host='0.0.0.0', port=8001)
 
 
 

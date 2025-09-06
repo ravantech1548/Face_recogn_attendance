@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
+const https = require('https');
+const fs = require('fs');
 
 dotenv.config();
 
@@ -33,9 +35,22 @@ app.get('/api/health', (req, res) => {
 // Initialize DB schema at startup (best-effort)
 const initDb = require('./src/setup/initDb');
 initDb().finally(() => {
-  app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-  });
+  // Try to load SSL certificates
+  try {
+    const options = {
+      key: fs.readFileSync('../ssl/key.pem'),
+      cert: fs.readFileSync('../ssl/cert.pem')
+    };
+    
+    https.createServer(options, app).listen(PORT, '0.0.0.0', () => {
+      console.log(`HTTPS Server running on port ${PORT}`);
+    });
+  } catch (error) {
+    console.log('SSL certificates not found, falling back to HTTP');
+    app.listen(PORT, '0.0.0.0', () => {
+      console.log(`HTTP Server running on port ${PORT}`);
+    });
+  }
 });
 
 
