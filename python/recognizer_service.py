@@ -11,6 +11,8 @@ import face_recognition
 import psycopg2
 import ssl
 
+from liveness import is_blinking, has_head_movement, detect_face_quality
+
 
 DB_USER = os.getenv('DB_USER', 'postgres')
 DB_HOST = os.getenv('DB_HOST', '127.0.0.1')
@@ -136,45 +138,223 @@ def reload_data():
     return jsonify({"reloaded": True, "known": len(store.staff_ids)})
 
 
+@app.post('/liveness-check')
+def liveness_check():
+    """
+    Endpoint specifically for liveness detection without face recognition.
+    Useful for testing liveness detection separately.
+    """
+    try:
+        print(f"Liveness check request received. Files: {list(request.files.keys())}")
+        print(f"Content-Type: {request.content_type}")
+        print(f"Form data: {list(request.form.keys())}")
+        
+        if 'images' not in request.files:
+            print("No 'images' field in request files")
+            return jsonify({"message": "'images' field with multiple image files required"}), 400
+
+        image_files = request.files.getlist('images')
+        if not image_files:
+            return jsonify({"message": "No images provided"}), 400
+
+        face_locations_list = []
+        face_landmarks_list = []
+
+        for file in image_files:
+            try:
+                image_bytes = file.read()
+                if not image_bytes:
+                    continue
+
+                pil_image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+                img_array = np.array(pil_image)
+
+                # Face detection
+                face_locations = face_recognition.face_locations(img_array)
+                if not face_locations:
+                    continue
+                face_locations_list.append(face_locations[0])
+
+                # Face landmarks for liveness detection
+                face_landmarks = face_recognition.face_landmarks(img_array, face_locations)
+                if face_landmarks:
+                    face_landmarks_list.append(face_landmarks[0])
+            except Exception as e:
+                print(f"Error processing image: {e}")
+                continue
+
+        if not face_landmarks_list:
+            return jsonify({"message": "No faces detected in any of the provided images"}), 400
+
+        # Liveness Detection
+        liveness_details = {
+            "blinking_detected": False,
+            "head_movement_detected": False,
+            "face_quality": {},
+            "total_frames": len(face_landmarks_list)
+        }
+
+        try:
+            if face_landmarks_list:
+                liveness_details["blinking_detected"] = bool(is_blinking(face_landmarks_list))
+                liveness_details["face_quality"] = detect_face_quality(face_landmarks_list[0], face_locations_list[0])
+
+            if face_locations_list:
+                liveness_details["head_movement_detected"] = bool(has_head_movement(face_locations_list))
+        except Exception as e:
+            print(f"Error in liveness detection: {e}")
+            return jsonify({"message": f"Liveness detection error: {str(e)}"}), 500
+
+        # Overall liveness assessment - require both blinking and head movement
+        liveness_passed = (liveness_details["blinking_detected"] and 
+                          liveness_details["head_movement_detected"])
+
+        return jsonify({
+            "liveness_passed": liveness_passed,
+            "liveness_details": liveness_details
+        })
+    except Exception as e:
+        print(f"Unexpected error in liveness_check: {e}")
+        return jsonify({"message": f"Internal server error: {str(e)}"}), 500
+
+
 @app.post('/recognize')
 def recognize():
-    store.ensure_loaded()
-    if 'image' not in request.files:
-        return jsonify({"message": "image field required"}), 400
-    file = request.files['image']
-    image_bytes = file.read()
-    if not image_bytes:
-        return jsonify({"message": "empty image"}), 400
+    try:
+        store.ensure_loaded()
+        
+        print(f"Recognize request received. Files: {list(request.files.keys())}")
+        print(f"Content-Type: {request.content_type}")
+        print(f"Form data: {list(request.form.keys())}")
+        
+        # Check if single image or multiple images for liveness detection
+        if 'images' in request.files:
+            # Multiple images for liveness detection
+            image_files = request.files.getlist('images')
+            if not image_files:
+                return jsonify({"message": "No images provided"}), 400
+            
+            face_locations_list = []
+            face_landmarks_list = []
+            face_encodings_list = []
+            
+            for file in image_files:
+                image_bytes = file.read()
+                if not image_bytes:
+                    continue
+                    
+                pil_image = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+                img_array = np.array(pil_image)
+                
+                # Face detection with more lenient parameters
+                face_locations = face_recognition.face_locations(img_array, model="hog")  # Use HOG model for better detection
+                if not face_locations:
+                    print(f"No faces detected in image {len(face_locations_list) + 1}")
+                    continue
+                
+                # Take the largest face if multiple faces detected
+                largest_face = max(face_locations, key=lambda face: (face[2] - face[0]) * (face[3] - face[1]))
+                face_locations_list.append(largest_face)
+                
+                # Face landmarks for liveness detection
+                face_landmarks = face_recognition.face_landmarks(img_array, [largest_face])
+                if face_landmarks:
+                    face_landmarks_list.append(face_landmarks[0])
+                
+                # Face encodings for recognition
+                face_encodings = face_recognition.face_encodings(img_array, [largest_face])
+                if face_encodings:
+                    face_encodings_list.append(face_encodings[0])
+            
+            if not face_encodings_list:
+                return jsonify({"message": "No faces detected in any of the provided images"}), 400
+            
+            # Liveness Detection
+            liveness_passed = False
+            liveness_details = {
+                "blinking_detected": False,
+                "head_movement_detected": False,
+                "face_quality": {}
+            }
+            
+            if face_landmarks_list:
+                liveness_details["blinking_detected"] = bool(is_blinking(face_landmarks_list))
+                liveness_details["face_quality"] = detect_face_quality(face_landmarks_list[0], face_locations_list[0])
+            
+            if face_locations_list:
+                liveness_details["head_movement_detected"] = bool(has_head_movement(face_locations_list))
+            
+            # Require both blinking and head movement for liveness
+            liveness_passed = (liveness_details["blinking_detected"] and 
+                              liveness_details["head_movement_detected"])
+            
+            if not liveness_passed:
+                return jsonify({
+                    "message": "Liveness check failed",
+                    "liveness_details": liveness_details
+                }), 403
+            
+            # Face Recognition (using the first detected face encoding)
+            enc = face_encodings_list[0]
+            (top, right, bottom, left) = face_locations_list[0]
+            
+        else:
+            # Single image (legacy support)
+            if 'image' not in request.files:
+                return jsonify({"message": "image field required"}), 400
+            file = request.files['image']
+            image_bytes = file.read()
+            if not image_bytes:
+                return jsonify({"message": "empty image"}), 400
 
-    pil = Image.open(io.BytesIO(image_bytes)).convert('RGB')
-    img = np.array(pil)
-    faces = face_recognition.face_locations(img)
-    if not faces:
-        return jsonify({"matches": []})
-    encs = face_recognition.face_encodings(img, faces)
+            pil = Image.open(io.BytesIO(image_bytes)).convert('RGB')
+            img = np.array(pil)
+            faces = face_recognition.face_locations(img, model="hog")
+            if not faces:
+                return jsonify({"matches": []})
+            
+            encs = face_recognition.face_encodings(img, faces)
+            face_landmarks = face_recognition.face_landmarks(img, faces)
+            
+            # Basic liveness check for single image
+            liveness_passed = True
+            liveness_details = {
+                "blinking_detected": False,
+                "head_movement_detected": False,
+                "face_quality": {}
+            }
+            
+            if face_landmarks:
+                liveness_details["face_quality"] = detect_face_quality(face_landmarks[0], faces[0])
+            
+            enc = encs[0]
+            (top, right, bottom, left) = faces[0]
 
-    results = []
-    for enc, (top, right, bottom, left) in zip(encs, faces):
-        if not store.encodings:
-            continue
-        distances = face_recognition.face_distance(store.encodings, enc)
-        best_idx = int(np.argmin(distances))
-        best_dist = float(distances[best_idx])
-        staff_id = store.staff_ids[best_idx]
-        meta = store.staff_meta.get(staff_id, {})
-        # Convert distance to a rough similarity score
-        score = max(0.0, 1.0 - best_dist)
-        matched = best_dist < 0.6
-        results.append({
-            "staffId": staff_id,
-            "fullName": meta.get("full_name", staff_id),
-            "bbox": [left, top, right, bottom],
-            "distance": best_dist,
-            "score": score,
-            "matched": matched,
-        })
+        results = []
+        if store.encodings:
+            distances = face_recognition.face_distance(store.encodings, enc)
+            best_idx = int(np.argmin(distances))
+            best_dist = float(distances[best_idx])
+            staff_id = store.staff_ids[best_idx]
+            meta = store.staff_meta.get(staff_id, {})
+            # Convert distance to a rough similarity score
+            score = max(0.0, 1.0 - best_dist)
+            matched = best_dist < 0.6
+            results.append({
+                "staffId": staff_id,
+                "fullName": meta.get("full_name", staff_id),
+                "bbox": [left, top, right, bottom],
+                "distance": best_dist,
+                "score": score,
+                "matched": matched,
+                "liveness_passed": liveness_passed,
+                "liveness_details": liveness_details
+            })
 
-    return jsonify({"matches": results})
+        return jsonify({"matches": results})
+    except Exception as e:
+        print(f"Unexpected error in recognize: {e}")
+        return jsonify({"message": f"Internal server error: {str(e)}"}), 500
 
 
 if __name__ == '__main__':
